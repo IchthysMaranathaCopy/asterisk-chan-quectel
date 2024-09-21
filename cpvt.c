@@ -206,6 +206,7 @@ EXPORT_DEF void dtmf_alloc(struct pvt * pvt, int dtmfdigit)
 			dtmf->sent = 1;
 		ast_log (LOG_ERROR, "dtmf pushed into struct '%d'\n", dtmf->dtmfdigit);
 			AST_LIST_INSERT_TAIL(&pvt->dtmflk, dtmf, entry);
+			ast_log (LOG_ERROR, "Inserted into ast list");
 		}
 }
 

@@ -856,7 +856,7 @@ e_return:
                         f->subclass_integer = dtmf->dtmfdigit;
                         ast_set_flag(ast_channel_flags(channel), AST_FLAG_IN_DTMF);
 			dtmf->sent = 0;
-                        goto e_return;
+                        ast_queue_frame(cpvt->channel, f);
 		        }
 	         }
 	static struct ast_frame f;

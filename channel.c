@@ -703,7 +703,10 @@ static struct ast_frame* channel_read (struct ast_channel* channel)
 		ast_log (LOG_ERROR, "entered dtmf traverse condition\n");
 		ast_log (LOG_ERROR, "dtmf structure digit is '%d'\n", dtmf->dtmfdigit);
 		        cpvt->a_read_frame.samples	= FRAME_SIZE;
-		        cpvt->a_read_frame.datalen	= FRAME_SIZE*2;                        
+		        cpvt->a_read_frame.datalen	= FRAME_SIZE*2;  
+		        cpvt->a_read_frame.data.ptr = cpvt->a_read_buf + AST_FRIENDLY_OFFSET;
+		        cpvt->a_read_frame.offset = AST_FRIENDLY_OFFSET;
+		        cpvt->a_read_frame.src = AST_MODULE;
 		        f = &cpvt->a_read_frame;
                         f->frametype = AST_FRAME_DTMF_END;
                         f->subclass_integer = dtmf->dtmfdigit;

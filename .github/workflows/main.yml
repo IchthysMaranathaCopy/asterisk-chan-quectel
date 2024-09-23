@@ -10,6 +10,7 @@ on:
         type: choice
         description: Choose Asterisk version - make sure it corresponds with Openwrt version chosen
         options: 
+        - $GITHUB_WORKSPACE/openwrt/urlmakefile/current/Ast20
         - $GITHUB_WORKSPACE/openwrt/urlmakefile/current/Ast18
         - $GITHUB_WORKSPACE/openwrt/urlmakefile/current/ast16 
 

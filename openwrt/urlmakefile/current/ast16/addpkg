@@ -27,4 +27,4 @@ CONFIG_PACKAGE_terminfo=m
 CONFIG_PACKAGE_uclibcxx=m
 CONFIG_PACKAGE_usb-modeswitch=m
 CONFIG_PACKAGE_asterisk16=m
-CONFIG_PACKAGE_asterisk16-chan-quectel=m
+CONFIG_PACKAGE_asterisk-chan-quectel=m

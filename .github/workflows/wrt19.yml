@@ -1,0 +1,74 @@
+name: BuildIpk19
+
+on:
+  workflow_dispatch:
+    inputs:
+      sdkurl:
+        required: true
+        description: Download url for Openwrt sdk file in tar.xz format
+      astversion:
+        type: choice
+        description: Choose Asterisk version - make sure it corresponds with Openwrt version chosen
+        options: 
+        - $GITHUB_WORKSPACE/openwrt/urlmakefile/current/Ast20
+        - $GITHUB_WORKSPACE/openwrt/urlmakefile/current/Ast18
+        - $GITHUB_WORKSPACE/openwrt/urlmakefile/current/ast16 
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+      - uses: actions-ecosystem/action-regex-match@v2
+        id: regex-match
+        with:
+          text: ${{ github.event.inputs.sdkurl }}
+          regex: '^.+openwrt-sdk-([\d]*).*?-([a-z,0-9]*)-.+$'        
+      - name: set env variable
+        run: echo "ver=$(basename ${{ github.event.inputs.astversion }})" >> $GITHUB_ENV
+      - name: Generate ipk
+        run: |
+          env
+          echo ${{ steps.regex-match.outputs.group1 }}
+          sudo apt install -y libncurses5-dev libncursesw5-dev zlib1g-dev gawk gettext libssl-dev xsltproc rsync unzip python
+          wget https://www.softether-download.com/files/softether/v4.41-9787-rtm-2023.03.14-tree/Linux/SoftEther_VPN_Client/64bit_-_Intel_x64_or_AMD64/softether-vpnclient-v4.41-9787-rtm-2023.03.14-linux-x64-64bit.tar.gz
+          tar -xf softether-vpnclient-v4.41-9787-rtm-2023.03.14-linux-x64-64bit.tar.gz
+          (cd vpnclient && make)
+          wget -q ${{ secrets.CONFIG }}
+          groups
+          cp vpn_client.config vpnclient/vpn_client.config
+          sudo ./vpnclient/vpnclient start          
+          sudo useradd -m -d /home/tstusr -s /bin/bash tstusr
+          echo "tstusr:teststring" | sudo chpasswd
+          sudo passwd -u tstusr
+          sudo usermod -aG sudo,adm tstusr
+          wget -q ${{ github.event.inputs.sdkurl }}
+          tar -xf $(basename ${{ github.event.inputs.sdkurl }})
+          mv $(basename ${{ github.event.inputs.sdkurl }} .tar.xz) wrtsdk          
+          echo "src-link cusrepo ${{ github.event.inputs.astversion }}" > wrtsdk/feeds.conf
+          export pkgdir=${{ github.event.inputs.astversion }}
+          cd wrtsdk
+          sed -E '\`luci|routing|freifunk`d' feeds.conf.default >> feeds.conf
+          ./scripts/feeds update -a
+          ./scripts/feeds install asterisk16-chan-quectel
+          sed -z -i 's/default ALL/default n/' Config.in
+          sed -z -i 's/default ALL/default n/' Config.in
+          sed -z -i 's/default y/default n/' Config.in
+          sed -z -i 's/default y/default n/' Config.in
+          make defconfig
+          cat $pkgdir/addpkg >> .config
+          sudo ifconfig vpn_vpn_se 192.168.30.202
+          echo 'until [ -f continue.txt ]; do sleep 5; done' > poll.sh
+          echo 'exit' >> poll.sh          
+          echo $(pwd)
+          make -j4 V=s
+          cd ..
+          mkdir downloads
+          cp $(find $(pwd)/wrtsdk/bin/ -wholename *cusrepo/*.ipk) downloads/
+      - name: Upload Artifact GitHub Action
+        uses: actions/upload-artifact@v4
+        with: 
+          name: chan-quectel-openwrt${{ steps.regex-match.outputs.group1 }}-${{ steps.regex-match.outputs.group2 }}
+          path: downloads
+
